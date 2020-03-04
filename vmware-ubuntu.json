@@ -1,0 +1,57 @@
+{
+  "variables": {
+    "aws_access_key": "",
+    "aws_secret_key": "",
+    "git_username": "",
+    "git_password": "27d417a7e68de9310efc286bcd86b158c7765c4f",
+    "ftp_user": "mfadm",
+    "ftp_password": "!A39tHxjBRmADG",
+    "region":         "us-east-1"
+  },
+  "builders": [
+    {
+      "access_key": "{{user `aws_access_key`}}",
+      "ami_name": "packer-vmware-{{timestamp}}",
+      "instance_type": "m4.2xlarge",
+      "region": "us-east-1",
+      "secret_key": "{{user `aws_secret_key`}}",
+      "source_ami_filter": {
+        "filters": {
+          "virtualization-type": "hvm",
+          "name": "ubuntu/images/*ubuntu-xenial-16.04-amd64-server-*",
+          "root-device-type": "ebs"
+        },
+        "owners": ["099720109477"],
+        "most_recent": true
+      },
+      "launch_block_device_mappings": [
+        {
+          "device_name": "/dev/sda1",
+          "volume_size": 250,
+          "delete_on_termination": true
+        }
+      ],
+      "ssh_username": "ubuntu",
+      "type": "amazon-ebs"
+    }
+  ],
+  "provisioners": [
+    {
+      "type": "shell",
+      "inline":[
+        "curl -o ~/vmware.bin -L --silent https://www.vmware.com/go/getWorkstation-linux",
+        "sudo apt-get update",
+        "sudo apt install --fix-missing -y build-essential libxi6 libgconf-2-4 libxtst6 libxcursor1 libxinerama1",
+        "sudo bash ~/vmware.bin --console --eulas-agreed --required -s vmware-workstation serialNumber HM6A1-2Z21M-48TD0-0H9AP-3D5NJ",
+        "sudo apt install -y git unzip p7zip-full lftp awscli",
+        "curl -o /tmp/packer.zip https://releases.hashicorp.com/packer/1.4.2/packer_1.4.2_linux_amd64.zip",
+        "unzip /tmp/packer.zip -d /tmp/packer",
+        "sudo mv /tmp/packer /usr/local/",
+        "sudo bash -c \"export PATH=$PATH:/usr/local/packer >> /etc/profile.d/setpath.sh\"",
+        "sudo chmod 755 /etc/profile.d/setpath.sh",
+        "git clone https://jhrabi:E5ln3ZWMVwsNScksGXlH@github.com/admpresales/nimbusclient-chef"
+
+      ]
+    }
+  ]
+}
